@@ -16,7 +16,6 @@ import Jimp from "jimp";
 import path from "path";
 import { type } from "os";
 
-
 dotenv.config();
 
 const { withAuth } = createAuth({
@@ -37,27 +36,16 @@ type Session = {
   };
 };
 
-const isAdmin = ({ session }: { session: Session }) => session?.data.isAdmin;
-
-const filterPosts = ({ session }: { session: Session }) => {
-  // if the user is an Admin, they can access all the records
-
-  console.log("mob", session);
-
-  if (session?.data.isAdmin) return true;
-  // otherwise, filter for published posts
-  return { valid: { equals: false } };
-};
+// const isAdmin = ({ session }: { session: Session }) => session?.data.isAdmin;
 
 const lists = {
-
   Company: list({
     access: allowAll,
     fields: {
       name: text({ validation: { isRequired: true } }),
       // valid: checkbox(),
       email: text({ validation: { isRequired: true }, isIndexed: "unique" }),
-      products: relationship({      ref: "Product", many: true  }),
+      products: relationship({ ref: "Product", many: true }),
       // categories: relationship({ ref: "Category", many: true }),
       vendors: relationship({ ref: "Vendor", many: true }),
     },
@@ -66,18 +54,16 @@ const lists = {
     access: allowAll,
     fields: {
       // company: relationship({ ref: "Company", many: false }),
-      name:text({ validation: { isRequired: true } }),
+      name: text({ validation: { isRequired: true } }),
       price: text({ validation: { isRequired: true } }),
       category: relationship({ ref: "Category", many: true }),
-
     },
   }),
-  
+
   Category: list({
     access: allowAll,
     fields: {
       name: text({ validation: { isRequired: true } }),
-
     },
   }),
   Vendor: list({
@@ -92,7 +78,7 @@ const lists = {
       // password: password({ validation: { isRequired: true } }),
     },
   }),
-  
+
   // Order: list({
   //   access: allowAll,
   //   fields: {
@@ -104,7 +90,6 @@ const lists = {
   //     // password: password({ validation: { isRequired: true } }),
   //   },
   // }),
-
 };
 
 const {
@@ -116,39 +101,38 @@ const {
 } = process.env;
 
 export default config({
-    db: {
-      provider: "postgresql",
-      url: "postgres://postgres:welcome@localhost:5432/postgres",
+  db: {
+    provider: "postgresql",
+    url: "postgres://postgres:welcome@localhost:5432/postgres",
+  },
+  lists,
+  session,
+  server: {
+    cors: { origin: ["http://localhost:3000"], credentials: true },
+    port: 3000,
+    // maxFileSize: 200 * 1024 * 1024,
+    // healthCheck: true,
+    extendExpressApp: (app, commonContext) => {
+      /* ... */
     },
-    lists,
-    session,
-    server: {
-      cors: { origin: ["http://localhost:3000"], credentials: true },
-      port: 3000,
-      // maxFileSize: 200 * 1024 * 1024,
-      // healthCheck: true,
-      extendExpressApp: (app, commonContext) => {
-        /* ... */
-      },
-      extendHttpServer: (httpServer, commonContext, graphQLSchema) => {
-        /* ... */
-      },
+    extendHttpServer: (httpServer, commonContext, graphQLSchema) => {
+      /* ... */
     },
-    storage: {
-      // The key here will be what is referenced in the image field
-      my_local_images: {
-        // Images that use this store will be stored on the local machine
-        kind: "local",
-        // This store is used for the image field type
-        type: "image",
-        // The URL that is returned in the Keystone GraphQL API
-        generateUrl: (path) => `${baseUrl}/images${path}`,
-        // The route that will be created in Keystone's backend to serve the images
-        serverRoute: {
-          path: "/images",
-        },
-        storagePath: "public/images",
+  },
+  storage: {
+    // The key here will be what is referenced in the image field
+    my_local_images: {
+      // Images that use this store will be stored on the local machine
+      kind: "local",
+      // This store is used for the image field type
+      type: "image",
+      // The URL that is returned in the Keystone GraphQL API
+      generateUrl: (path) => `${baseUrl}/images${path}`,
+      // The route that will be created in Keystone's backend to serve the images
+      serverRoute: {
+        path: "/images",
       },
+      storagePath: "public/images",
     },
-  })
-
+  },
+});
